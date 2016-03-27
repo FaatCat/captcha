@@ -9,7 +9,7 @@ local rutil = {}
 function rutil.getNetCt(net,bs,rho,hs,cls)
 
     local batchSize = bs or 16
-    local rho = rho or 1
+    local rho = rho or 16
     local hiddenSize = hs or 36 
     local classes = cls or 36
 
@@ -137,28 +137,28 @@ function rutil.model(h,w)
       vgg:add(nn.ReLU(true))
       return vgg
     end
-    ConvBNReLU(1,64):add(nn.Dropout(0.3,nil,true))
+    ConvBNReLU(1,64)--:add(nn.Dropout(0.3,nil,true))
     ConvBNReLU(64,64)
     ConvBNReLU(64,64)
     vgg:add(nn.SpatialMaxPooling(2,2,2,2):ceil())
-    ConvBNReLU(64,128):add(nn.Dropout(0.4,nil,true))
-    ConvBNReLU(128,128):add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(64,128)--:add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(128,128)--:add(nn.Dropout(0.4,nil,true))
     vgg:add(nn.SpatialMaxPooling(2,2,2,2):ceil())
-    ConvBNReLU(128,256):add(nn.Dropout(0.4,nil,true))
-    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(128,256)--:add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
     vgg:add(nn.SpatialMaxPooling(2,2,2,2):ceil())
-    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
-    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
     vgg:add(nn.SpatialMaxPooling(2,2,2,2):ceil())
-    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
-    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
-    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
     vgg:add(nn.SpatialMaxPooling(2,2,2,2):ceil())
     local magicNum = 256*4*8 --256*2*7
     vgg:add(nn.View(-1,magicNum))
 
     local classifier = nn.Sequential()
-    classifier:add(nn.Dropout(0.5,nil,true))
+    --classifier:add(nn.Dropout(0.5,nil,true))
     classifier:add(nn.Linear(magicNum,256))
     classifier:add(nn.BatchNormalization(256))
     classifier:add(nn.ReLU(true))

@@ -14,23 +14,23 @@ function output_to_label(output)
 end
 
 require 'MultiCrossEntropyCriterion'
-require 'cutorch'
-require 'cunn'
-require 'cudnn'
+--require 'cutorch'
+--require 'cunn'
+--require 'cudnn'
 require 'nn'
 require 'rnn'
 
-model_filename = arg[2] or 'trained.t7'
+model_filename = arg[2] or 'trained_cpu.t7'
 model = torch.load(model_filename)
 --ct = torch.load('ct.t7')
 
 model:evaluate()
-model:cuda()
+--model:cuda()
 
 require 'image'
 
 
-local batch = image.load(arg[1]):cuda()
+local batch = image.load(arg[1]):float()--:cuda()
 
 out = model:forward(batch)
 
