@@ -6,10 +6,11 @@ local data = {}
 
 function data.getHash()
     local hash = {}
-    for i=string.byte('0') ,string.byte('9')  do
+    table.insert(hash, '_')
+    for i=string.byte('0') ,string.byte('9') do
         table.insert(hash,string.char(i))
     end
-    for i=string.byte('A') ,string.byte('Z')  do
+    for i=string.byte('a') ,string.byte('z')  do
         table.insert(hash,string.char(i))
     end
     return hash
@@ -30,60 +31,37 @@ function data.loadY(dir)
     local csv = csvigo.load{path = dir .. 'ans.txt', mode = 'raw'}
     local Ystr = {}
     for i=1,#csv do
-        
-        table.insert(Ystr,string.upper(csv[i][1]))
+        table.insert(Ystr,csv[i][1])
     end
-    
     local N = #Ystr
     local d = #Ystr[1]
     local Y = torch.zeros(N,d)
     local map = data.getMap()
     for i=1,N do
         for j=1,d do
-            
             local c = string.sub(Ystr[i],j,j)
-            
             Y[i][j] = map[c]
         end
     end
     return Y
 end
 
-function data.loadXn(dir, pfx, nstart, nend, dH, dW)
-    local dH = dH or 120
-    local dW = dW or 240
-    local function readX(dir, from, to)
-        local X = torch.zeros(to-from+1,dH,dW)
-        --print('dH: ' .. dH .. ' W: ' .. dW)
-        for j=from,from+to-from do
-            --print(image.load(dir .. '' .. (pfx or '') .. j .. '.png'):size())
-            X[j-from+1] = image.load(dir ..''..(pfx or '').. j ..'.png')[1]
-            --if (i==1) then print(X[j]) end
-        end
-        return X
-    end
-    return readX(dir,nstart,nend)
-end
-
-function data.loadX(dir,pfx,N,dH,dW)
+function data.loadX(dir,N,dH,dW)
     local dH = dH or 50
-    local dW = dW or 170
+    local dW = dW or 200
     local function readX(dir,i,b)
         local X = torch.zeros(b,dH,dW)
-        print('dH: ' .. dH .. ' W: ' .. dW)
         for j=i,i+b-1 do
-            --print(image.load(dir .. '' .. (pfx or '') .. j .. '.png'):size())
-            X[j] = image.load(dir ..''..(pfx or '').. j ..'.png')[1]
-            --if (i==1) then print(X[j]) end
+            X[j] = image.load(dir ..''.. j ..'.png')[2]
         end
         return X
     end
     return readX(dir,1,N) 
 end
 
-function data.storeXY(dir,dH,dW,pfx)
+function data.storeXY(dir,dH,dW)
     local Y = data.loadY(dir)
-    local X = data.loadX(dir,pfx,Y:size(1),dH,dW)
+    local X = data.loadX(dir,Y:size(1),dH,dW)
     torch.save(dir .. '/data.t7',{X=X,Y=Y})
 end
 
@@ -105,10 +83,9 @@ function data.split(X,Y,Nv)
     return Xt,Yt,Xv,Yv
 end
 
-function data.convert1(Y1, maxSeq)
-    local maxSeq = maxSeq or 10
+function data.convert1(Y1)
     local N = Y1:nElement()
-    local Y2 = torch.ones(maxSeq)
+    local Y2 = torch.ones(7)
     local j = 1
     for i=1,7 do
         if(Y1[i]~=1) then

@@ -24,6 +24,7 @@ function rutil.getNetCt(net,bs,rho,hs,cls)
 
 
     local rnn = nn.Sequential():add(net):add(nn.Sequencer(mlp))
+    --local rnn = nn.Sequencer(mlp)
     local criterion = nn.SequencerCriterion(nn.ClassNLLCriterion())
     return rnn,criterion
 end
@@ -105,17 +106,18 @@ function rutil.train(rnn,criterion,Xt,Yt,Xv,Yv,T,batchSize,tnet,lr)
             local gradOutputs = criterion:backward(outputs,targets)
             acc = acc + rutil.facc(outputs,targets)/#targets
             rnn:backward(inputs,gradOutputs)
-            rnn:backwardThroughTime()
+            --rnn:backwardThroughTime()
             rnn:updateParameters(lr or 0.001)
             rnn:zeroGradParameters()
             rnn:forget()
+            --break
         end
         print('loss',loss)
         print('train',100*acc/Nt)
-        local v,acc = rutil.valid(rnn,Xv,Yv,batchSize,tnet)
-        if(v>maxv) then maxv = v end
-        print('v',v,'maxv',maxv)    
-        print(acc)
+        --local v,acc = rutil.valid(rnn,Xv,Yv,batchSize,tnet)
+        --if(v>maxv) then maxv = v end
+        --print('v',v,'maxv',maxv)    
+        --print(acc)
         print(os.date("%X", os.time()))
     end
     print(maxv)
@@ -123,45 +125,46 @@ end
 
 
 
-function rutil.model()
+function rutil.model(h,w)
 
-    local k = k or 5
+    local k = k or 10
     local c = c or 36
     vgg = nn.Sequential()
-    vgg:add(nn.Reshape(1,50,200))
+    vgg:add(nn.Reshape(1,h, w))
     local function ConvBNReLU(nInputPlane, nOutputPlane)
       vgg:add(nn.SpatialConvolution(nInputPlane, nOutputPlane, 3,3, 1,1, 1,1))
       vgg:add(nn.SpatialBatchNormalization(nOutputPlane,1e-3))
       vgg:add(nn.ReLU(true))
       return vgg
     end
-    ConvBNReLU(1,64)--:add(nn.Dropout(0.3,nil,true))
+    ConvBNReLU(1,64):add(nn.Dropout(0.3,nil,true))
     ConvBNReLU(64,64)
     ConvBNReLU(64,64)
     vgg:add(nn.SpatialMaxPooling(2,2,2,2):ceil())
-    ConvBNReLU(64,128)--:add(nn.Dropout(0.4,nil,true))
-    ConvBNReLU(128,128)--:add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(64,128):add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(128,128):add(nn.Dropout(0.4,nil,true))
     vgg:add(nn.SpatialMaxPooling(2,2,2,2):ceil())
-    ConvBNReLU(128,256)--:add(nn.Dropout(0.4,nil,true))
-    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(128,256):add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
     vgg:add(nn.SpatialMaxPooling(2,2,2,2):ceil())
-    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
-    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
     vgg:add(nn.SpatialMaxPooling(2,2,2,2):ceil())
-    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
-    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
-    ConvBNReLU(256,256)--:add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
+    ConvBNReLU(256,256):add(nn.Dropout(0.4,nil,true))
     vgg:add(nn.SpatialMaxPooling(2,2,2,2):ceil())
-    vgg:add(nn.View(256*2*7))
+    local magicNum = 256*4*8 --256*2*7
+    vgg:add(nn.View(-1,magicNum))
 
     local classifier = nn.Sequential()
-    --classifier:add(nn.Dropout(0.5,nil,true))
-    classifier:add(nn.Linear(256*2*7,256))
+    classifier:add(nn.Dropout(0.5,nil,true))
+    classifier:add(nn.Linear(magicNum,256))
     classifier:add(nn.BatchNormalization(256))
     classifier:add(nn.ReLU(true))
     classifier:add(nn.Linear(256,k*c))
     vgg:add(classifier)
-    vgg:add(nn.Reshape(5,36))
+    vgg:add(nn.Reshape(k,c))
     vgg:add(nn.SplitTable(2,3))
     return vgg
 end
