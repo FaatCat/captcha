@@ -9,7 +9,7 @@ local rutil = {}
 function rutil.getNetCt(net,bs,rho,hs,cls)
 
     local batchSize = bs or 16
-    local rho = rho or 16
+    local rho = rho or 1
     local hiddenSize = hs or 36 
     local classes = cls or 36
 
